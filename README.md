@@ -50,24 +50,29 @@ flowchart LR
 
 ```
 multimodal/
-├── manage.py
+├── README.md
 └── multimodal/
-    ├── settings.py            # Konfigurasi Django
-    ├── urls.py                # URL utama
-    ├── backend/
+    ├── backend/               # Backend Django
+    │   ├── manage.py          # Entry point Django
+    │   ├── settings.py        # Shim → config.settings
+    │   ├── urls.py            # Shim → config.urls
+    │   ├── config/            # Paket konfigurasi proyek
+    │   │   ├── __init__.py
+    │   │   ├── settings.py    # Konfigurasi Django
+    │   │   ├── urls.py        # URL utama (include apps.review)
+    │   │   ├── wsgi.py
+    │   │   └── asgi.py
     │   ├── apps/
-    │   │   └── revie/         # Aplikasi review & sentiment analysis
-    │   │       ├── models.py          # User, Product, Review, ReviewImage, SentimentAnalysis, ModelLog
-    │   │       ├── serializers.py     # Serializer DRF
-    │   │       ├── urls.py            # Endpoint /api/reviews/
-    │   │       ├── controllers/
-    │   │       │   ├── review_controller.py
-    │   │       │   └── sentiment_controller.py
-    │   │       └── services/
-    │   │           └── tensorflow_service.py   # Load & jalankan model TensorFlow
-    │   └── config/
-    │       ├── settings.py
-    │       └── urls.py
+    │       └── review/        # Aplikasi review & sentiment analysis
+    │           ├── models.py          # User, Product, Review, ReviewImage, SentimentAnalysis, ModelLog
+    │           ├── serializers.py     # Serializer DRF
+    │           ├── urls.py            # Endpoint /api/reviews/
+    │           ├── controllers/
+    │           │   ├── review_controller.py
+    │           │   └── sentiment_controller.py
+    │           └── services/
+    │               └── tensorflow_service.py   # Load & jalankan model TensorFlow
+    │   └── models/            # Folder model TensorFlow (sentiment_model)
     ├── frontend/              # Aplikasi React + TypeScript
     │   ├── src/
     │   │   ├── App.tsx
@@ -76,7 +81,6 @@ multimodal/
     │   │   ├── services/api.ts
     │   │   └── types/review.ts
     │   └── package.json
-    └── models/                # Folder model TensorFlow (sentiment_model)
 ```
 
 ## 🗃️ Skema Database
@@ -124,16 +128,25 @@ Membuat review baru dan menjalankan analisis sentimen multimodal.
 
 - Python 3.12+
 - Node.js 18+
-- TensorFlow & dependencies backend (lihat `myenv/` virtual environment)
+- Package Python: `django`, `djangorestframework`, `tensorflow`, `numpy`
 
 ### 1. Backend (Django)
 
 ```bash
-# Aktifkan virtual environment
-source /home/arifikimiaunila/django-projects/myenv/bin/activate
+# (Opsional) buat & aktifkan virtual environment
+# Windows
+python -m venv myenv
+myenv\Scripts\activate
 
-# Masuk ke direktori proyek
-cd multimodal
+# Linux/macOS
+# python3 -m venv myenv
+# source myenv/bin/activate
+
+# Install dependensi
+pip install django djangorestframework tensorflow numpy
+
+# Masuk ke direktori backend
+cd multimodal/backend
 
 # Migrasi database
 python manage.py migrate
@@ -147,7 +160,7 @@ Backend berjalan di `http://localhost:8000`.
 ### 2. Frontend (React + Vite)
 
 ```bash
-cd multimodal/multimodal/frontend
+cd multimodal/frontend
 
 # Install dependencies
 npm install
@@ -162,12 +175,12 @@ Frontend berjalan di `http://localhost:5173` (bawaan Vite).
 
 ## 🧠 Catatan Model AI
 
-Model dimuat dari `models/sentiment_model` saat startup. Saat ini pipeline masih menggunakan **placeholder/dummy**:
+Model dimuat dari `backend/models/sentiment_model` saat startup (path relatif terhadap direktori tempat `manage.py` dijalankan). Saat ini pipeline masih menggunakan **placeholder/dummy**:
 
 - `text_embedding` → random vector `(1, 768)` (rencana: pipeline **BERT**)
 - `image_array` → random tensor `(1, 224, 224, 3)` (rencana: **CNN**)
 
-Ganti implementasi dummy di `backend/apps/revie/services/tensorflow_service.py` dengan pipeline preprocessing sesungguhnya sebelum produksi.
+Ganti implementasi dummy di `backend/apps/review/services/tensorflow_service.py` dengan pipeline preprocessing sesungguhnya sebelum produksi.
 
 ## 📌 Roadmap
 
